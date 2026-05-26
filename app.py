@@ -25,16 +25,22 @@ st.markdown("""
 st.title("🍅 Tomato Leaf Disease Analyzer")
 st.write("Upload a clear photo of a single tomato leaf to detect potential diseases.")
 
-# 3. CACHED MODEL LOADER (Prevents reload lag on clicks)
+# --- TEMP DIAGNOSTIC MODEL LOADER ---
 @st.cache_resource
 def load_tomato_model():
     return tf.keras.models.load_model('tomato_model.h5')
 
+# Print out files in the server directory to see why it's hiding
+current_directory_files = os.listdir('.')
+st.write("### 🔍 Server Directory Scan:")
+st.write(current_directory_files)
+
 try:
     model = load_tomato_model()
+    st.success("🎯 Success! Model found and loaded smoothly.")
 except Exception as e:
-    st.error("Could not find 'tomato_model.h5'. Ensure it is in the same folder as this script!")
-
+    st.error(f"❌ Error Loading Model: {e}")
+    
 # 4. CLASS NAME DEFINITIONS
 # Ensure these match the exact folder names from your dataset in alphabetical order!
 CLASS_NAMES = [
