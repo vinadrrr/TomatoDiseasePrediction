@@ -3,11 +3,13 @@ import tensorflow as tf
 from tensorflow.keras.preprocessing.image import img_to_array
 import numpy as np
 from PIL import Image
+import os
+import urllib.request
 
 # 1. BROWSER TAB CONFIGURATION
 st.set_page_config(page_title="Tomato Leaf Doctor", page_icon="🍅", layout="centered")
 
-# 2. CUSTOM VISUAL THEME (Tomato Red Accents)
+# Custom UI styling
 st.markdown("""
 <style>
     .stButton>button {
@@ -25,24 +27,39 @@ st.markdown("""
 st.title("🍅 Tomato Leaf Disease Analyzer")
 st.write("Upload a clear photo of a single tomato leaf to detect potential diseases.")
 
-# --- TEMP DIAGNOSTIC MODEL LOADER ---
+# --- 2. AUTOMATIC MODEL DOWNLOAD PIPELINE ---
+MODEL_PATH = "tomato_model.h5"
+
+# 🛑 REPLACE THIS URL STRING WITH YOUR GOOGLE DRIVE OR DROPBOX LINK
+# If using Google Drive, make sure it is a direct download link or paste your raw sharing link here!
+SHARED_LINK = "PASTE_YOUR_COPIED_CLOUD_LINK_HERE"
+
 @st.cache_resource
 def load_tomato_model():
-    return tf.keras.models.load_model('tomato_model.h5')
-
-# Print out files in the server directory to see why it's hiding
-current_directory_files = os.listdir('.')
-st.write("### 🔍 Server Directory Scan:")
-st.write(current_directory_files)
+    # If the model file isn't in the folder, download it directly from your cloud link
+    if not os.path.exists(MODEL_PATH):
+        with st.spinner("📥 Initializing server weights (this happens once on startup)..."):
+            try:
+                # Helper function to handle Google Drive conversion to direct download link
+                url = SHARED_LINK
+                if "drive.google.com" in url and "file/d/" in url:
+                    file_id = url.split("file/d/")[1].split("/")[0]
+                    url = f"https://docs.google.com/uc?export=download&id={file_id}"
+                elif "dropbox.com" in url:
+                    url = url.replace("?dl=0", "?dl=1")
+                
+                urllib.request.urlretrieve(url, MODEL_PATH)
+            except Exception as download_error:
+                st.error(f"Failed to fetch model from cloud storage: {download_error}")
+                
+    return tf.keras.models.load_model(MODEL_PATH)
 
 try:
     model = load_tomato_model()
-    st.success("🎯 Success! Model found and loaded smoothly.")
 except Exception as e:
-    st.error(f"❌ Error Loading Model: {e}")
-    
-# 4. CLASS NAME DEFINITIONS
-# Ensure these match the exact folder names from your dataset in alphabetical order!
+    st.error(f"❌ Error initializing network framework: {e}")
+
+# 3. CLASS NAME DEFINITIONS
 CLASS_NAMES = [
     'Bacterial Spot', 
     'Early Blight', 
@@ -56,33 +73,26 @@ CLASS_NAMES = [
     'Healthy'
 ]
 
-# 5. USER INTERFACE: FILE UPLOADER
+# 4. USER INTERFACE: FILE UPLOADER
 uploaded_file = st.file_uploader("Upload leaf image (JPG/PNG)...", type=["jpg", "png", "jpeg"])
 
 if uploaded_file is not None:
-    # Display the uploaded image to the user
     image = Image.open(uploaded_file)
     st.image(image, caption='Uploaded Tomato Leaf', use_column_width=True)
     
-    # 6. INFERENCE PIPELINE RUNNER
     if st.button('Run Diagnostics'):
         with st.spinner('Analyzing plant tissue anomalies...'):
-            # Image Preprocessing (Must match your training input parameters)
             img = image.resize((224, 224))
             img_array = img_to_array(img)
-            img_array = np.expand_dims(img_array, axis=0) # Add batch dimension (1, 224, 224, 3)
-            img_array = img_array / 255.0 # Normalize pixel vectors to 0-1 range
+            img_array = np.expand_dims(img_array, axis=0)
+            img_array = img_array / 255.0
             
-            # Execute model prediction
             predictions = model.predict(img_array)
             highest_score_index = np.argmax(predictions[0])
-            
-            # Extract the highest probability value directly
             confidence = predictions[0][highest_score_index] * 100
-        
+            
             prediction_label = CLASS_NAMES[highest_score_index]
             
-            # Render Diagnostic Report Output UI
             st.write("---")
             st.subheader("Diagnostic Report:")
             
