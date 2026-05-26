@@ -32,7 +32,7 @@ MODEL_PATH = "tomato_model.h5"
 
 # 🛑 REPLACE THIS URL STRING WITH YOUR GOOGLE DRIVE OR DROPBOX LINK
 # If using Google Drive, make sure it is a direct download link or paste your raw sharing link here!
-SHARED_LINK = "PASTE_YOUR_COPIED_CLOUD_LINK_HERE"
+SHARED_LINK = "https://drive.google.com/file/d/1ouodYp5pGKjXVM9d6hGU_3Fy1qcdZ_cj/view?usp=sharing"
 
 @st.cache_resource
 def load_tomato_model():
