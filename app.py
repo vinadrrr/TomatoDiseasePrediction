@@ -4,10 +4,10 @@ from tensorflow.keras.preprocessing.image import img_to_array
 import numpy as np
 from PIL import Image
 
-# 1. BROWSER TAB CONFIGURATION
+# BROWSER TAB CONFIGURATION
 st.set_page_config(page_title="Tomato Leaf Doctor", page_icon="🍅", layout="centered")
 
-# 2. CUSTOM VISUAL THEME (Tomato Red Accents)
+# VISUAL THEME 
 st.markdown("""
 <style>
     .stButton>button {
@@ -25,7 +25,7 @@ st.markdown("""
 st.title("🍅 Tomato Leaf Disease Analyzer")
 st.write("Upload a clear photo of a single tomato leaf to detect potential diseases.")
 
-# 3. CACHED MODEL LOADER (Prevents reload lag on clicks)
+# CACHED MODEL LOADER 
 @st.cache_resource
 def load_tomato_model():
     return tf.keras.models.load_model('tomato_model.h5')
@@ -35,43 +35,40 @@ try:
 except Exception as e:
     st.error("Could not find 'tomato_model.h5'. Ensure it is in the same folder as this script!")
 
-# 4. CLASS NAME DEFINITIONS
-# Ensure these match the exact folder names from your dataset in alphabetical order!
+# CLASS NAME DEFINITIONS
 CLASS_NAMES = [
-    'Bacterial Spot', 
-    'Early Blight', 
-    'Late Blight', 
-    'Leaf Mold', 
-    'Septoria Leaf Spot', 
-    'Spider Mites', 
-    'Target Spot', 
-    'Yellow Leaf Curl Virus', 
-    'Mosaic Virus', 
-    'Healthy'
+    'Bacterial_spot',               
+    'Early_blight',                  
+    'Late_blight',               
+    'Leaf_Mold',                
+    'Septoria_leaf_spot',        
+    'Spider_mites Two-spotted_spider_mite',
+    'Target_Spot',                
+    'Tomato_mosaic_virus',          
+    'Tomato_Yellow_Leaf_Curl_Virus', 
+    'healthy',                     
+    'powdery_mildew'                  
 ]
 
-# 5. USER INTERFACE: FILE UPLOADER
+# FILE UPLOADER
 uploaded_file = st.file_uploader("Upload leaf image (JPG/PNG)...", type=["jpg", "png", "jpeg"])
 
 if uploaded_file is not None:
-    # Display the uploaded image to the user
     image = Image.open(uploaded_file)
     st.image(image, caption='Uploaded Tomato Leaf', use_column_width=True)
     
-    # 6. INFERENCE PIPELINE RUNNER
     if st.button('Run Diagnostics'):
         with st.spinner('Analyzing plant tissue anomalies...'):
-            # Image Preprocessing (Must match your training input parameters)
+            # Image Preprocessing 
             img = image.resize((224, 224))
             img_array = img_to_array(img)
-            img_array = np.expand_dims(img_array, axis=0) # Add batch dimension (1, 224, 224, 3)
-            img_array = img_array / 255.0 # Normalize pixel vectors to 0-1 range
+            img_array = np.expand_dims(img_array, axis=0) 
+            img_array = img_array / 255.0 
             
             # Execute model prediction
             predictions = model.predict(img_array)
             highest_score_index = np.argmax(predictions[0])
             
-            # Extract the highest probability value directly
             confidence = predictions[0][highest_score_index] * 100
         
             prediction_label = CLASS_NAMES[highest_score_index]
